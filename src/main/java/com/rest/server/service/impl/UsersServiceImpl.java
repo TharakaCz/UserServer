@@ -4,8 +4,8 @@ import com.rest.server.helper.UsersDTO;
 import com.rest.server.model.Users;
 import com.rest.server.repository.UsersRepository;
 import com.rest.server.service.UsersService;
+import com.rest.server.utill.AppConstent;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.internet.MimeMessage;
-/*import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;*/
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -27,7 +24,6 @@ public class UsersServiceImpl implements UsersService {
     @Autowired
     private JavaMailSender javaMailSender;
     private Date date;
-    /*private static String UPLOADED_FOLDER="./uploard/profile";*/
     private String veryfyKey;
 
     @Override
@@ -48,8 +44,8 @@ public class UsersServiceImpl implements UsersService {
                users.setName(usersDTO.getName());
                users.setPassword(Base64.getEncoder().encode(usersDTO.getPassword().getBytes()));
                users.setRegdate(new Date());
-               users.setRole("CLIENT");
-               users.setStatus("PENDING");
+               users.setRole(AppConstent.ROLECLIENT);
+               users.setStatus(AppConstent.PENDING);
                veryfyKey = UUID.randomUUID().toString();
                users.setVeryfyCode(veryfyKey);
                if (usersRepository.save(users) != null){
@@ -123,14 +119,14 @@ public class UsersServiceImpl implements UsersService {
 
         if (!email.equals(null) && !password.equals(null)){
             Users users = usersRepository.findByEmailAndPassword(email,Base64.getEncoder().encode(password.getBytes()));
-            if (users.getRole() == "ADMIN"){
+            if (users.getRole().equals(AppConstent.ROLEADMIN)){
                 UsersDTO usersDTO = getUser(users);
                 return usersDTO;
             }else {
                 return null;
             }
         }else {
-            return "You Are Not Authorized User !";
+            return "Password OR Email Incorrect";
         }
 
     }
@@ -141,7 +137,7 @@ public class UsersServiceImpl implements UsersService {
        if (multipartFile.getContentType().equals("image/png") || multipartFile.getContentType().equals("image/jpeg")){
            Users users = usersRepository.findByEmail(email);
            if (users != null){
-               if (users.getStatus().equals("VERYFID")){
+               if (users.getStatus().equals(AppConstent.VERYFID)){
                   users.setImage(Base64.getEncoder().encode(multipartFile.getBytes()));
                   users.setImageType(multipartFile.getContentType());
                    if (usersRepository.save(users) != null){
@@ -165,7 +161,7 @@ public class UsersServiceImpl implements UsersService {
        Users users = usersRepository.findByVeryfyCode(veryfyCode);
 
        if (users != null){
-           users.setStatus("VERYFID");
+           users.setStatus(AppConstent.VERYFID);
            if (usersRepository.save(users) != null){
                return "Account Veryfy Sccsessfully";
            }else {
